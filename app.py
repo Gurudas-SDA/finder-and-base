@@ -506,7 +506,7 @@ def writings_database_page():
                 st.info("Nav atrasti Original Source ieraksti šim avotam")
                 selected_original = ""
         else:
-            st.info("Vispirms izvēlies Source")
+            st.info("First select Source")
             selected_original = ""
     
     # Find the verses poga
