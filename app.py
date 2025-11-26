@@ -366,6 +366,15 @@ def get_verses_by_source(database, cited_source, original_source, max_verses):
 def verse_finder_page():
     st.markdown("<h1>Gauḍīya Vaiṣṇava Verse Finder</h1>", unsafe_allow_html=True)
 
+    # Sānjosla
+    with st.sidebar:
+        if 'database' not in st.session_state:
+            st.error("Datu bāze nav pieejama")
+            st.stop()
+        
+        max_results = st.slider("Max verse number", 5, 50, 20)
+        min_confidence = st.slider("Min similarity %", 10, 80, 30) / 100
+
     if 'database' not in st.session_state:
         st.error("Datu bāze nav ielādēta. Lūdzu sazinieties ar administratoru.")
         return
@@ -398,9 +407,6 @@ def verse_finder_page():
         if not search_input.strip():
             st.warning("Ierakstiet tekstu!")
             return
-
-        max_results = st.session_state.get('max_results_finder', 20)
-        min_confidence = st.session_state.get('min_confidence_finder', 0.3)
 
         with st.spinner('Finding...'):
             results = search_verses(search_input, st.session_state['database'], max_results, min_confidence)
@@ -465,6 +471,10 @@ def writings_database_page():
     # Iegūst visus source nosaukumus
     all_sources = get_unique_sources(database)
     
+    # Sānjosla ar Max verse number slider
+    with st.sidebar:
+        max_verses = st.slider("Max verse number", 1, 50, 10)
+    
     # Galvenā daļa
     col1, col2 = st.columns([1, 1])
     
@@ -503,8 +513,6 @@ def writings_database_page():
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Find the verses", type="primary", disabled=(not selected_source or not selected_original)):
         if selected_source and selected_original:
-            max_verses = st.session_state.get('max_verses_db', 10)
-            
             with st.spinner('Meklē pantus...'):
                 verses = get_verses_by_source(database, selected_source, selected_original, max_verses)
             
@@ -565,36 +573,11 @@ def main():
                 st.session_state['db_count'] = cnt
 
     # Navigācijas izvēlne
-    tab1, tab2 = st.tabs(["Verse Finder", "Writings Database"])
+    page = st.sidebar.radio("", ["Verse Finder", "Writings Database"])
     
-    with tab1:
-        # Sānjosla Verse Finder
-        with st.sidebar:
-            st.markdown("### Verse Finder Settings")
-            max_results = st.slider("Max verse number", 5, 50, 20, key="slider_max_results_finder")
-            min_confidence = st.slider("Min similarity %", 10, 80, 30, key="slider_min_confidence") / 100
-            st.session_state['max_results_finder'] = max_results
-            st.session_state['min_confidence_finder'] = min_confidence
-            
-            # Cache clear poga
-            if st.button("🔄 Reload Database", help="Clear cache and reload database from file", key="reload_finder"):
-                st.cache_data.clear()
-                st.rerun()
-        
+    if page == "Verse Finder":
         verse_finder_page()
-    
-    with tab2:
-        # Sānjosla Writings Database
-        with st.sidebar:
-            st.markdown("### Writings Database Settings")
-            max_verses = st.slider("Max verse number", 1, 50, 10, key="slider_max_verses_db")
-            st.session_state['max_verses_db'] = max_verses
-            
-            # Cache clear poga
-            if st.button("🔄 Reload Database", help="Clear cache and reload database from file", key="reload_db"):
-                st.cache_data.clear()
-                st.rerun()
-        
+    else:
         writings_database_page()
 
 if __name__ == "__main__":
